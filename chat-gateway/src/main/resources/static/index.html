@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业客服系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 登录容器 -->
+    <div id="loginBox" class="container">
+        <div class="card">
+            <h1>企业客服系统</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" placeholder="请输入用户名" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" placeholder="请输入密码" required>
+                </div>
+                <button type="submit" class="btn btn-primary">登 录</button>
+                <button type="button" id="showRegister" class="btn btn-link">没有账号？去注册</button>
+            </form>
+            <div id="loginMsg" class="msg"></div>
+        </div>
+    </div>
+
+    <!-- 注册容器 -->
+    <div id="registerBox" class="container" style="display:none;">
+        <div class="card">
+            <h1>用户注册</h1>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="regUsername">用户名</label>
+                    <input type="text" id="regUsername" placeholder="请输入用户名" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">密码</label>
+                    <input type="password" id="regPassword" placeholder="请输入密码" required>
+                </div>
+                <div class="form-group">
+                    <label for="regNickname">昵称</label>
+                    <input type="text" id="regNickname" placeholder="请输入昵称">
+                </div>
+                <button type="submit" class="btn btn-primary">注 册</button>
+                <button type="button" id="showLogin" class="btn btn-link">已有账号？去登录</button>
+            </form>
+            <div id="regMsg" class="msg"></div>
+        </div>
+    </div>
+
+    <!-- 聊天容器 -->
+    <div id="chatBox" class="chat-container" style="display:none;">
+        <div class="chat-sidebar">
+            <div class="sidebar-header">
+                <span id="currentUser"></span>
+                <button id="logoutBtn" class="btn btn-small">退出</button>
+            </div>
+            <div class="session-list" id="sessionList">
+                <div class="session-empty">暂无会话</div>
+            </div>
+            <button id="newSessionBtn" class="btn btn-primary btn-block">新建会话</button>
+        </div>
+        <div class="chat-main">
+            <div class="chat-header" id="chatHeader">
+                <span>选择会话开始聊天</span>
+            </div>
+            <div class="chat-messages" id="messageList">
+                <div class="message-empty">选择或创建一个会话</div>
+            </div>
+            <div class="chat-input">
+                <textarea id="messageInput" placeholder="输入消息..." disabled></textarea>
+                <button id="sendBtn" class="btn btn-primary" disabled>发送</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
