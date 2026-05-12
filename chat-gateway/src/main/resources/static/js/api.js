@@ -66,6 +66,10 @@ const API = {
         return this.get('/chat/session/list?userId=' + userId);
     },
 
+    getAgentSessions(agentId) {
+        return this.get('/chat/session/agent?agentId=' + agentId);
+    },
+
     getAgentStatus() {
         return this.get('/agent/status');
     },

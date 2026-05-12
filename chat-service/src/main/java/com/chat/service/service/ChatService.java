@@ -20,5 +20,7 @@ public interface ChatService extends IService<ChatSession> {
 
     List<ChatSession> getSessions(Long userId);
 
+    List<ChatSession> getSessionsByAgent(Long agentId);
+
     void closeSession(Long sessionId);
 }

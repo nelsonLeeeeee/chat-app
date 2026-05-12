@@ -1,5 +1,7 @@
 package com.chat.common.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+
 import java.time.LocalDateTime;
 
 /**
@@ -14,6 +16,10 @@ public class ChatSession {
     private String status;
     private LocalDateTime createTime;
     private LocalDateTime closeTime;
+    @TableField(exist = false)
+    private String userName;
+    @TableField(exist = false)
+    private String agentName;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -29,4 +35,8 @@ public class ChatSession {
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
     public LocalDateTime getCloseTime() { return closeTime; }
     public void setCloseTime(LocalDateTime closeTime) { this.closeTime = closeTime; }
+    public String getUserName() { return userName; }
+    public void setUserName(String userName) { this.userName = userName; }
+    public String getAgentName() { return agentName; }
+    public void setAgentName(String agentName) { this.agentName = agentName; }
 }

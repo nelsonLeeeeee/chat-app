@@ -16,6 +16,12 @@
     const sessionList = document.getElementById('sessionList');
     const messageList = document.getElementById('messageList');
     const chatHeader = document.getElementById('chatHeader');
+    const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+    const headerButtons = document.getElementById('headerButtons');
+    const closeSessionBtn = document.getElementById('closeSessionBtn');
+    const userSideLogoutBtn = document.getElementById('userSideLogoutBtn');
+    const chatMain = document.getElementById('chatMain');
+    const chatSidebar = document.querySelector('.chat-sidebar');
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
     const newSessionBtn = document.getElementById('newSessionBtn');
@@ -48,6 +54,17 @@
         registerBox.style.display = 'none';
         chatBox.style.display = 'flex';
         currentUser.textContent = user.nickname || user.username;
+        if (user.role === 'USER') {
+            chatSidebar.style.display = 'none';
+            chatMain.style.flex = '1';
+            userSideLogoutBtn.style.display = '';
+            headerButtons.style.display = '';
+        } else {
+            chatSidebar.style.display = '';
+            chatMain.style.flex = '';
+            userSideLogoutBtn.style.display = 'none';
+            headerButtons.style.display = '';
+        }
     }
 
     document.getElementById('showRegister').onclick = showRegister;
@@ -67,7 +84,17 @@
                 showChat();
                 loginMsg.textContent = '';
                 document.getElementById('password').value = '';
+                if (user.role === 'AGENT') {
+                    newSessionBtn.style.display = 'none';
+                }
                 await loadSessions();
+                if (user.role === 'USER' && sessions.length === 0) {
+                    var autoRes = await API.createSession(user.id);
+                    if (autoRes.code === 200) {
+                        activeSessionId = autoRes.data.id;
+                        await loadSessions();
+                    }
+                }
                 startStatusPolling();
             } else {
                 loginMsg.textContent = res.message || '登录失败';
@@ -85,11 +112,12 @@
         const username = document.getElementById('regUsername').value.trim();
         const password = document.getElementById('regPassword').value;
         const nickname = document.getElementById('regNickname').value.trim();
+        const role = document.getElementById('regRole').value;
 
         if (!username || !password) return;
 
         try {
-            const res = await API.register({ username, password, nickname });
+            const res = await API.register({ username, password, nickname, role });
             if (res.code === 200) {
                 regMsg.textContent = '注册成功，请登录';
                 regMsg.className = 'msg success';
@@ -106,7 +134,7 @@
     };
 
     /* ========== 退出 ========== */
-    logoutBtn.onclick = function () {
+    function doLogout() {
         stopPolling();
         stopStatusPolling();
         user = null;
@@ -114,13 +142,38 @@
         activeSessionId = null;
         lastMessageCount = 0;
         showLogin();
+    }
+
+    logoutBtn.onclick = doLogout;
+    userSideLogoutBtn.onclick = doLogout;
+
+    /* ========== 结束对话 ========== */
+    closeSessionBtn.onclick = async function () {
+        if (!activeSessionId) return;
+        try {
+            var res = await API.closeSession(activeSessionId);
+            if (res.code === 200) {
+                var session = sessions.find(function (s) { return s.id === activeSessionId; });
+                if (session) session.status = 'CLOSED';
+                closeSessionBtn.style.display = 'none';
+                messageInput.disabled = true;
+                sendBtn.disabled = true;
+                messageInput.placeholder = '会话已关闭';
+                renderSessions();
+                switchSession(activeSessionId);
+            }
+        } catch (err) {
+            console.error('关闭会话失败', err);
+        }
     };
 
     /* ========== 会话管理 ========== */
     async function loadSessions() {
         if (!user) return;
         try {
-            const res = await API.getSessions(user.id);
+            var res = user.role === 'AGENT'
+                ? await API.getAgentSessions(user.id)
+                : await API.getSessions(user.id);
             if (res.code === 200) {
                 sessions = res.data || [];
                 renderSessions();
@@ -155,14 +208,19 @@
         sessionList.innerHTML = sessions.map(function (s) {
             var active = s.id === activeSessionId ? ' active' : '';
             var statusText = { 'WAITING': '等待中', 'ACTIVE': '进行中', 'CLOSED': '已关闭' }[s.status] || s.status;
+            var displayName = user.role === 'AGENT'
+                ? (s.userName || '用户#' + s.userId)
+                : (s.agentType === 'AI' ? '智能客服' : (s.agentName || '客服#' + s.agentId));
             var agentLabel = '';
-            if (s.agentType === 'AI') {
-                agentLabel = ' | <span class="agent-tag ai">AI</span>';
-            } else if (s.agentType === 'HUMAN') {
-                agentLabel = ' | <span class="agent-tag human">人工</span>';
+            if (user.role !== 'AGENT') {
+                if (s.agentType === 'AI') {
+                    agentLabel = ' | <span class="agent-tag ai">AI</span>';
+                } else if (s.agentType === 'HUMAN') {
+                    agentLabel = ' | <span class="agent-tag human">人工</span>';
+                }
             }
             return '<div class="session-item' + active + '" data-id="' + s.id + '">'
-                + '会话 #' + s.id + ' <small>(' + statusText + ')' + agentLabel + '</small></div>';
+                + displayName + ' <small>(' + statusText + ')' + agentLabel + '</small></div>';
         }).join('');
 
         sessionList.querySelectorAll('.session-item').forEach(function (item) {
@@ -181,17 +239,16 @@
 
         var session = sessions.find(function (s) { return s.id === sessionId; });
         if (session) {
-            var agentInfo = '';
-            if (session.agentType === 'AI') {
-                agentInfo = ' | 服务方: <span style="color:#9b59b6">智能客服</span>';
-            } else if (session.agentType === 'HUMAN') {
-                agentInfo = ' | 服务方: <span style="color:#27ae60">人工客服 (#' + (session.agentId || '?') + ')</span>';
-            }
+            var otherParty = user.role === 'AGENT'
+                ? (session.userName || '用户#' + session.userId)
+                : (session.agentType === 'AI' ? '智能客服' : (session.agentName || '客服#' + session.agentId));
             var statusText = { 'WAITING': '等待客服接入', 'ACTIVE': '聊天中', 'CLOSED': '已关闭' }[session.status] || session.status;
-            chatHeader.innerHTML = '<span>会话 #' + sessionId + ' (' + statusText + ')' + agentInfo + '</span>'
-                + '<span id="agentStatusBadge" class="status-badge '
-                + (agentOnline ? 'online' : 'offline') + '">'
-                + (agentOnline ? '人工客服在线' : '人工客服离线') + '</span>';
+            chatHeaderTitle.innerHTML = '与 ' + otherParty + ' 聊天中 (' + statusText + ')';
+            if (user.role === 'AGENT' && session.status === 'ACTIVE') {
+                closeSessionBtn.style.display = '';
+            } else {
+                closeSessionBtn.style.display = 'none';
+            }
         }
 
         var disabled = !session || session.status === 'CLOSED';
@@ -302,10 +359,8 @@
             var res = await API.getAgentStatus();
             if (res.code === 200) {
                 agentOnline = res.data && res.data.hasOnline;
-                var badge = document.getElementById('agentStatusBadge');
-                if (badge) {
-                    badge.className = 'status-badge ' + (agentOnline ? 'online' : 'offline');
-                    badge.textContent = agentOnline ? '人工客服在线' : '人工客服离线';
+                if (activeSessionId && user && user.role !== 'AGENT') {
+                    switchSession(activeSessionId);
                 }
             }
         } catch (err) {

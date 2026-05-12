@@ -24,7 +24,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
     @Override
     public SysUser register(SysUser user) {
         user.setPassword(DigestUtil.md5Hex(user.getPassword()));
-        user.setRole("USER");
+        String role = user.getRole();
+        if (role == null || role.isEmpty() || (!"USER".equals(role) && !"AGENT".equals(role))) {
+            role = "USER";
+        }
+        user.setRole(role);
         user.setStatus(1);
         save(user);
         return user;

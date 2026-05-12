@@ -51,6 +51,12 @@ public class ChatController {
         return Result.ok(sessions);
     }
 
+    @GetMapping("/session/agent")
+    public Result<List<ChatSession>> getAgentSessions(@RequestParam Long agentId) {
+        List<ChatSession> sessions = chatService.getSessionsByAgent(agentId);
+        return Result.ok(sessions);
+    }
+
     @PostMapping("/session/{sessionId}/close")
     public Result<Void> closeSession(@PathVariable Long sessionId) {
         chatService.closeSession(sessionId);

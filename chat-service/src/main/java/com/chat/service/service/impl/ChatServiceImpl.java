@@ -125,7 +125,37 @@ public class ChatServiceImpl extends ServiceImpl<ChatSessionMapper, ChatSession>
         LambdaQueryWrapper<ChatSession> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ChatSession::getUserId, userId)
                .orderByDesc(ChatSession::getCreateTime);
-        return list(wrapper);
+        List<ChatSession> sessions = list(wrapper);
+        populateNames(sessions);
+        return sessions;
+    }
+
+    @Override
+    public List<ChatSession> getSessionsByAgent(Long agentId) {
+        LambdaQueryWrapper<ChatSession> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ChatSession::getAgentId, agentId)
+               .eq(ChatSession::getStatus, "ACTIVE")
+               .orderByDesc(ChatSession::getCreateTime);
+        List<ChatSession> sessions = list(wrapper);
+        populateNames(sessions);
+        return sessions;
+    }
+
+    private void populateNames(List<ChatSession> sessions) {
+        for (ChatSession s : sessions) {
+            SysUser user = userService.getById(s.getUserId());
+            if (user != null) {
+                s.setUserName(user.getNickname() != null ? user.getNickname() : user.getUsername());
+            }
+            if ("AI".equals(s.getAgentType())) {
+                s.setAgentName("智能客服");
+            } else if (s.getAgentId() != null) {
+                SysUser agent = userService.getById(s.getAgentId());
+                if (agent != null) {
+                    s.setAgentName(agent.getNickname() != null ? agent.getNickname() : agent.getUsername());
+                }
+            }
+        }
     }
 
     @Override
