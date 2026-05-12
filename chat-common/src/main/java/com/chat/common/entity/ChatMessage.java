@@ -11,6 +11,7 @@ public class ChatMessage {
     private Long sessionId;
     private Long senderId;
     private String content;
+    private String senderRole;
     private String msgType;
     private LocalDateTime createTime;
 
@@ -23,6 +24,8 @@ public class ChatMessage {
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
     public String getMsgType() { return msgType; }
+    public String getSenderRole() { return senderRole; }
+    public void setSenderRole(String senderRole) { this.senderRole = senderRole; }
     public void setMsgType(String msgType) { this.msgType = msgType; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }

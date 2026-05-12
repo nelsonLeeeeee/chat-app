@@ -32,8 +32,10 @@ public class ChatController {
     @PostMapping("/message")
     public Result<ChatMessage> sendMessage(@RequestParam Long sessionId,
                                            @RequestParam Long senderId,
-                                           @RequestParam String content) {
-        ChatMessage message = chatService.sendMessage(sessionId, senderId, content);
+                                           @RequestParam String content,
+                                           @RequestParam(required = false) String senderRole) {
+        String role = (senderRole != null && !senderRole.isEmpty()) ? senderRole : "USER";
+        ChatMessage message = chatService.sendMessage(sessionId, senderId, role, content);
         return Result.ok(message);
     }
 
@@ -41,6 +43,12 @@ public class ChatController {
     public Result<List<ChatMessage>> getMessages(@PathVariable Long sessionId) {
         List<ChatMessage> messages = chatService.getMessages(sessionId);
         return Result.ok(messages);
+    }
+
+    @GetMapping("/session/list")
+    public Result<List<ChatSession>> getSessions(@RequestParam Long userId) {
+        List<ChatSession> sessions = chatService.getSessions(userId);
+        return Result.ok(sessions);
     }
 
     @PostMapping("/session/{sessionId}/close")

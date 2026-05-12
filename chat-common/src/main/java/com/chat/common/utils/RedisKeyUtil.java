@@ -12,6 +12,11 @@ public class RedisKeyUtil {
         return PREFIX + "online:users";
     }
 
+    /** 在线客服集合 */
+    public static String onlineAgents() {
+        return PREFIX + "online:agents";
+    }
+
     /** 会话缓存 */
     public static String session(Long sessionId) {
         return PREFIX + "session:" + sessionId;

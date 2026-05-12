@@ -8,28 +8,17 @@ import java.util.List;
 
 public interface ChatService extends IService<ChatSession> {
 
-    /**
-     * 创建会话
-     */
     ChatSession createSession(Long userId);
 
-    /**
-     * 分配客服
-     */
     void assignAgent(Long sessionId, Long agentId);
 
-    /**
-     * 发送消息
-     */
     ChatMessage sendMessage(Long sessionId, Long senderId, String content);
 
-    /**
-     * 获取会话消息列表
-     */
+    ChatMessage sendMessage(Long sessionId, Long senderId, String senderRole, String content);
+
     List<ChatMessage> getMessages(Long sessionId);
 
-    /**
-     * 关闭会话
-     */
+    List<ChatSession> getSessions(Long userId);
+
     void closeSession(Long sessionId);
 }

@@ -46,11 +46,12 @@ const API = {
         return this.post('/chat/session?userId=' + userId);
     },
 
-    sendMessage(sessionId, senderId, content) {
+    sendMessage(sessionId, senderId, content, senderRole) {
         const form = new FormData();
         form.append('sessionId', sessionId);
         form.append('senderId', senderId);
         form.append('content', content);
+        form.append('senderRole', senderRole || 'USER');
         return fetch(this.baseUrl + '/chat/message', {
             method: 'POST',
             body: form
@@ -59,6 +60,22 @@ const API = {
 
     getMessages(sessionId) {
         return this.get('/chat/messages/' + sessionId);
+    },
+
+    getSessions(userId) {
+        return this.get('/chat/session/list?userId=' + userId);
+    },
+
+    getAgentStatus() {
+        return this.get('/agent/status');
+    },
+
+    agentGoOnline(agentId) {
+        return this.post('/agent/online?agentId=' + agentId);
+    },
+
+    agentGoOffline(agentId) {
+        return this.post('/agent/offline?agentId=' + agentId);
     },
 
     closeSession(sessionId) {

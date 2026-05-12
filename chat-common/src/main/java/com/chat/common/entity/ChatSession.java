@@ -10,6 +10,7 @@ public class ChatSession {
     private Long id;
     private Long userId;
     private Long agentId;
+    private String agentType;
     private String status;
     private LocalDateTime createTime;
     private LocalDateTime closeTime;
@@ -20,6 +21,8 @@ public class ChatSession {
     public void setUserId(Long userId) { this.userId = userId; }
     public Long getAgentId() { return agentId; }
     public void setAgentId(Long agentId) { this.agentId = agentId; }
+    public String getAgentType() { return agentType; }
+    public void setAgentType(String agentType) { this.agentType = agentType; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public LocalDateTime getCreateTime() { return createTime; }
