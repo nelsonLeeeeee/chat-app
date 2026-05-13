@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -36,6 +35,16 @@ public class ChatServiceImpl extends ServiceImpl<ChatSessionMapper, ChatSession>
     @Override
     @Transactional
     public ChatSession createSession(Long userId) {
+        // B2B模式：每个用户只保留一个会话，如果已有活跃会话则直接返回
+        LambdaQueryWrapper<ChatSession> existWrapper = new LambdaQueryWrapper<>();
+        existWrapper.eq(ChatSession::getUserId, userId)
+                    .eq(ChatSession::getStatus, "ACTIVE");
+        ChatSession existing = getOne(existWrapper);
+        if (existing != null) {
+            populateNames(java.util.Collections.singletonList(existing));
+            return existing;
+        }
+
         ChatSession session = new ChatSession();
         session.setUserId(userId);
         session.setStatus("ACTIVE");
@@ -86,8 +95,8 @@ public class ChatServiceImpl extends ServiceImpl<ChatSessionMapper, ChatSession>
     @Transactional
     public ChatMessage sendMessage(Long sessionId, Long senderId, String senderRole, String content) {
         ChatSession session = getById(sessionId);
-        if (session == null || "CLOSED".equals(session.getStatus())) {
-            throw new RuntimeException("会话不存在或已关闭");
+        if (session == null) {
+            throw new RuntimeException("会话不存在");
         }
 
         ChatMessage message = new ChatMessage();
@@ -99,7 +108,7 @@ public class ChatServiceImpl extends ServiceImpl<ChatSessionMapper, ChatSession>
         messageMapper.insert(message);
 
         if ("AI".equals(session.getAgentType()) && !"AI".equals(senderRole)) {
-            String aiResponse = aiChatService.generateResponse(content);
+            String aiResponse = aiChatService.generateResponse(content, sessionId);
             ChatMessage aiMsg = new ChatMessage();
             aiMsg.setSessionId(sessionId);
             aiMsg.setSenderId(aiChatService.getAiUserId());
@@ -155,16 +164,6 @@ public class ChatServiceImpl extends ServiceImpl<ChatSessionMapper, ChatSession>
                     s.setAgentName(agent.getNickname() != null ? agent.getNickname() : agent.getUsername());
                 }
             }
-        }
-    }
-
-    @Override
-    public void closeSession(Long sessionId) {
-        ChatSession session = getById(sessionId);
-        if (session != null) {
-            session.setStatus("CLOSED");
-            session.setCloseTime(LocalDateTime.now());
-            updateById(session);
         }
     }
 }

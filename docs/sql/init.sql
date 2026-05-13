@@ -49,6 +49,34 @@ CREATE TABLE IF NOT EXISTS `chat_message` (
 INSERT INTO sys_user (username, password, nickname, role, status)
 VALUES ('ai_assistant', MD5('ai_system_internal_@#!'), '智能客服', 'AI', 1);
 
+-- ============================================================
+-- RAG 知识库相关表（v2 新增）
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS `knowledge_document` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `file_name` VARCHAR(255) NOT NULL COMMENT '原始文件名',
+    `file_size` BIGINT DEFAULT 0 COMMENT '文件大小(字节)',
+    `content` LONGTEXT COMMENT '完整提取文本',
+    `chunk_count` INT DEFAULT 0 COMMENT '分块数量',
+    `uploader_id` BIGINT DEFAULT NULL COMMENT '上传者ID',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_uploader_id` (`uploader_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库文档表';
+
+CREATE TABLE IF NOT EXISTS `knowledge_chunk` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `document_id` BIGINT NOT NULL COMMENT '所属文档ID',
+    `chunk_index` INT NOT NULL COMMENT '分块序号(从0开始)',
+    `content` TEXT NOT NULL COMMENT '分块文本内容',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_document_id` (`document_id`),
+    FULLTEXT INDEX `ft_content` (`content`) WITH PARSER ngram
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库分块表';
+
 -- 已有数据库迁移语句（如果表已存在，单独执行以下 ALTER）
 -- ALTER TABLE chat_message ADD COLUMN sender_role VARCHAR(16) NOT NULL DEFAULT 'USER' COMMENT '发送者角色: USER-用户, AGENT-客服, AI-智能客服' AFTER sender_id;
 -- ALTER TABLE chat_session ADD COLUMN agent_type VARCHAR(16) DEFAULT NULL COMMENT '服务方类型: HUMAN-人工客服, AI-智能客服' AFTER agent_id;

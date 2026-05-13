@@ -1,5 +1,5 @@
 /**
- * 企业客服系统 — 前端主逻辑
+ * 企业B2B客服系统 — 前端主逻辑
  */
 (function () {
     'use strict';
@@ -15,10 +15,8 @@
     const currentUser = document.getElementById('currentUser');
     const sessionList = document.getElementById('sessionList');
     const messageList = document.getElementById('messageList');
-    const chatHeader = document.getElementById('chatHeader');
     const chatHeaderTitle = document.getElementById('chatHeaderTitle');
     const headerButtons = document.getElementById('headerButtons');
-    const closeSessionBtn = document.getElementById('closeSessionBtn');
     const userSideLogoutBtn = document.getElementById('userSideLogoutBtn');
     const chatMain = document.getElementById('chatMain');
     const chatSidebar = document.querySelector('.chat-sidebar');
@@ -26,6 +24,11 @@
     const sendBtn = document.getElementById('sendBtn');
     const newSessionBtn = document.getElementById('newSessionBtn');
     const logoutBtn = document.getElementById('logoutBtn');
+    const knowledgePanel = document.getElementById('knowledgePanel');
+    const uploadPdfBtn = document.getElementById('uploadPdfBtn');
+    const pdfFileInput = document.getElementById('pdfFileInput');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const knowledgeList = document.getElementById('knowledgeList');
 
     // 状态
     let user = null;
@@ -59,11 +62,16 @@
             chatMain.style.flex = '1';
             userSideLogoutBtn.style.display = '';
             headerButtons.style.display = '';
+            knowledgePanel.style.display = 'none';
+            newSessionBtn.style.display = 'none';
         } else {
             chatSidebar.style.display = '';
             chatMain.style.flex = '';
             userSideLogoutBtn.style.display = 'none';
             headerButtons.style.display = '';
+            knowledgePanel.style.display = '';
+            newSessionBtn.style.display = 'none';
+            loadKnowledgeList();
         }
     }
 
@@ -85,14 +93,17 @@
                 loginMsg.textContent = '';
                 document.getElementById('password').value = '';
                 if (user.role === 'AGENT') {
-                    newSessionBtn.style.display = 'none';
-                }
-                await loadSessions();
-                if (user.role === 'USER' && sessions.length === 0) {
-                    var autoRes = await API.createSession(user.id);
-                    if (autoRes.code === 200) {
-                        activeSessionId = autoRes.data.id;
-                        await loadSessions();
+                    await API.agentGoOnline(user.id);
+                    await loadSessions();
+                } else {
+                    await loadSessions();
+                    if (sessions.length === 0) {
+                        var autoRes = await API.createSession(user.id);
+                        if (autoRes.code === 200) {
+                            activeSessionId = autoRes.data.id;
+                            await loadSessions();
+                            switchSession(activeSessionId);
+                        }
                     }
                 }
                 startStatusPolling();
@@ -134,7 +145,10 @@
     };
 
     /* ========== 退出 ========== */
-    function doLogout() {
+    async function doLogout() {
+        if (user && user.role === 'AGENT') {
+            try { await API.agentGoOffline(user.id); } catch (e) {}
+        }
         stopPolling();
         stopStatusPolling();
         user = null;
@@ -146,26 +160,6 @@
 
     logoutBtn.onclick = doLogout;
     userSideLogoutBtn.onclick = doLogout;
-
-    /* ========== 结束对话 ========== */
-    closeSessionBtn.onclick = async function () {
-        if (!activeSessionId) return;
-        try {
-            var res = await API.closeSession(activeSessionId);
-            if (res.code === 200) {
-                var session = sessions.find(function (s) { return s.id === activeSessionId; });
-                if (session) session.status = 'CLOSED';
-                closeSessionBtn.style.display = 'none';
-                messageInput.disabled = true;
-                sendBtn.disabled = true;
-                messageInput.placeholder = '会话已关闭';
-                renderSessions();
-                switchSession(activeSessionId);
-            }
-        } catch (err) {
-            console.error('关闭会话失败', err);
-        }
-    };
 
     /* ========== 会话管理 ========== */
     async function loadSessions() {
@@ -207,7 +201,6 @@
         }
         sessionList.innerHTML = sessions.map(function (s) {
             var active = s.id === activeSessionId ? ' active' : '';
-            var statusText = { 'WAITING': '等待中', 'ACTIVE': '进行中', 'CLOSED': '已关闭' }[s.status] || s.status;
             var displayName = user.role === 'AGENT'
                 ? (s.userName || '用户#' + s.userId)
                 : (s.agentType === 'AI' ? '智能客服' : (s.agentName || '客服#' + s.agentId));
@@ -220,7 +213,7 @@
                 }
             }
             return '<div class="session-item' + active + '" data-id="' + s.id + '">'
-                + displayName + ' <small>(' + statusText + ')' + agentLabel + '</small></div>';
+                + displayName + agentLabel + '</div>';
         }).join('');
 
         sessionList.querySelectorAll('.session-item').forEach(function (item) {
@@ -242,19 +235,12 @@
             var otherParty = user.role === 'AGENT'
                 ? (session.userName || '用户#' + session.userId)
                 : (session.agentType === 'AI' ? '智能客服' : (session.agentName || '客服#' + session.agentId));
-            var statusText = { 'WAITING': '等待客服接入', 'ACTIVE': '聊天中', 'CLOSED': '已关闭' }[session.status] || session.status;
-            chatHeaderTitle.innerHTML = '与 ' + otherParty + ' 聊天中 (' + statusText + ')';
-            if (user.role === 'AGENT' && session.status === 'ACTIVE') {
-                closeSessionBtn.style.display = '';
-            } else {
-                closeSessionBtn.style.display = 'none';
-            }
+            chatHeaderTitle.innerHTML = '与 ' + otherParty + ' 的商务对话';
         }
 
-        var disabled = !session || session.status === 'CLOSED';
-        messageInput.disabled = disabled;
-        sendBtn.disabled = disabled;
-        messageInput.placeholder = disabled ? (session && session.status === 'CLOSED' ? '会话已关闭' : '请等待客服接入') : '输入消息...';
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+        messageInput.placeholder = '输入消息...';
     }
 
     /* ========== 消息加载 ========== */
@@ -282,16 +268,19 @@
 
         messageList.innerHTML = messages.map(function (m) {
             var roleClass, roleLabel = '';
-            if (m.senderRole === 'AI') {
+            if (m.msgType === 'SYSTEM' || m.senderRole === 'SYSTEM') {
+                roleClass = 'system';
+            } else if (m.senderRole === 'AI') {
                 roleClass = 'ai';
                 roleLabel = '智能客服';
             } else if (m.senderRole === 'AGENT') {
                 roleClass = 'agent';
-                roleLabel = '客服';
+                roleLabel = '产品方客服';
             } else if (m.senderId === user.id) {
                 roleClass = 'self';
             } else {
                 roleClass = 'user';
+                roleLabel = '客户方';
             }
             return '<div class="message-item ' + roleClass + '">'
                 + (roleLabel ? '<span class="message-role-label ' + roleClass + '">' + roleLabel + '</span>' : '')
@@ -358,8 +347,12 @@
         try {
             var res = await API.getAgentStatus();
             if (res.code === 200) {
+                var wasOnline = agentOnline;
                 agentOnline = res.data && res.data.hasOnline;
                 if (activeSessionId && user && user.role !== 'AGENT') {
+                    if (wasOnline !== agentOnline) {
+                        await loadSessions();
+                    }
                     switchSession(activeSessionId);
                 }
             }
@@ -373,6 +366,76 @@
         var div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    /* ========== 知识库管理 ========== */
+    uploadPdfBtn.onclick = function () {
+        pdfFileInput.click();
+    };
+
+    pdfFileInput.onchange = async function () {
+        var file = pdfFileInput.files[0];
+        if (!file) return;
+        uploadStatus.textContent = '上传中...';
+        uploadStatus.className = 'msg';
+        try {
+            var res = await API.uploadKnowledge(file);
+            if (res.code === 200) {
+                uploadStatus.textContent = '上传成功';
+                uploadStatus.className = 'msg success';
+                pdfFileInput.value = '';
+                loadKnowledgeList();
+            } else {
+                uploadStatus.textContent = res.message || '上传失败';
+                uploadStatus.className = 'msg error';
+            }
+        } catch (err) {
+            uploadStatus.textContent = '网络错误';
+            uploadStatus.className = 'msg error';
+        }
+    };
+
+    async function loadKnowledgeList() {
+        try {
+            var res = await API.getKnowledgeList();
+            if (res.code === 200 && res.data) {
+                renderKnowledgeList(res.data);
+            } else {
+                knowledgeList.innerHTML = '<div class="session-empty">暂无文档</div>';
+            }
+        } catch (err) {
+            knowledgeList.innerHTML = '<div class="session-empty">加载失败</div>';
+        }
+    }
+
+    function renderKnowledgeList(docs) {
+        if (!docs || docs.length === 0) {
+            knowledgeList.innerHTML = '<div class="session-empty">暂无文档</div>';
+            return;
+        }
+        knowledgeList.innerHTML = docs.map(function (d) {
+            var sizeText = d.fileSize ? (d.fileSize / 1024).toFixed(0) + 'KB' : '';
+            return '<div class="knowledge-item">'
+                + '<span class="doc-name" title="' + escapeHtml(d.fileName || '') + '">' + escapeHtml(d.fileName || '未知文件') + '</span>'
+                + '<span class="doc-info">' + sizeText + '</span>'
+                + '<button class="btn-delete" data-id="' + d.id + '" title="删除">×</button>'
+                + '</div>';
+        }).join('');
+
+        knowledgeList.querySelectorAll('.btn-delete').forEach(function (btn) {
+            btn.onclick = async function () {
+                var id = parseInt(this.dataset.id);
+                if (!confirm('确定删除该文档？')) return;
+                try {
+                    var res = await API.deleteKnowledge(id);
+                    if (res.code === 200) {
+                        loadKnowledgeList();
+                    }
+                } catch (err) {
+                    console.error('删除失败', err);
+                }
+            };
+        });
     }
 
     /* ========== 初始化 ========== */

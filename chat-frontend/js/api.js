@@ -82,7 +82,23 @@ const API = {
         return this.post('/agent/offline?agentId=' + agentId);
     },
 
-    closeSession(sessionId) {
-        return this.post('/chat/session/' + sessionId + '/close');
+    // 知识库管理
+    uploadKnowledge(file) {
+        const form = new FormData();
+        form.append('file', file);
+        return fetch(this.baseUrl + '/knowledge/upload', {
+            method: 'POST',
+            body: form
+        }).then(r => r.json());
+    },
+
+    getKnowledgeList() {
+        return this.get('/knowledge/list');
+    },
+
+    deleteKnowledge(id) {
+        return fetch(this.baseUrl + '/knowledge/' + id, {
+            method: 'DELETE'
+        }).then(r => r.json());
     }
 };
