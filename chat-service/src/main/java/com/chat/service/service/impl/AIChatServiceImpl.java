@@ -25,11 +25,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * AI聊天服务实现，调用DeepSeek大模型生成RAG增强回复
+ */
 @Service
 public class AIChatServiceImpl implements AIChatService {
 
     private static final Logger log = LoggerFactory.getLogger(AIChatServiceImpl.class);
 
+    /** 系统提示词模板，注入知识库上下文 */
     private static final String SYSTEM_PROMPT = "你是企业B2B客服助手，在一个企业级商务平台上为企业客户提供专业服务。\n\n"
             + "=== 回答准则 ===\n"
             + "1. 使用专业、简洁、礼貌的语气\n"
@@ -43,25 +47,28 @@ public class AIChatServiceImpl implements AIChatService {
             + "请根据以上知识库内容回答用户问题。";
 
     @Value("${deepseek.api.key}")
-    private String apiKey;
+    private String apiKey; // DeepSeek API密钥
 
     @Value("${deepseek.api.url}")
-    private String apiUrl;
+    private String apiUrl; // DeepSeek API地址
 
     @Value("${deepseek.api.model}")
-    private String model;
+    private String model; // 模型名称
 
     @Resource
-    private UserMapper userMapper;
+    private UserMapper userMapper; // 用户数据访问
 
     @Resource
-    private KnowledgeChunkMapper knowledgeChunkMapper;
+    private KnowledgeChunkMapper knowledgeChunkMapper; // 知识库检索
 
     @Resource
-    private ChatMessageMapper chatMessageMapper;
+    private ChatMessageMapper chatMessageMapper; // 历史消息查询
 
-    private volatile Long cachedAiUserId;
+    private volatile Long cachedAiUserId; // 缓存AI助手用户ID
 
+    /**
+     * 双检锁懒加载获取AI助手用户ID
+     */
     @Override
     public Long getAiUserId() {
         if (cachedAiUserId == null) {
@@ -80,6 +87,9 @@ public class AIChatServiceImpl implements AIChatService {
         return cachedAiUserId;
     }
 
+    /**
+     * 生成简短问候语（无历史上下文）
+     */
     @Override
     public String generateResponse(String userMessage) {
         try {
@@ -94,6 +104,9 @@ public class AIChatServiceImpl implements AIChatService {
         }
     }
 
+    /**
+     * RAG增强回复：知识库检索+历史上下文+DeepSeek生成
+     */
     @Override
     public String generateResponse(String userMessage, Long sessionId) {
         try {
@@ -139,6 +152,9 @@ public class AIChatServiceImpl implements AIChatService {
         }
     }
 
+    /**
+     * 调用DeepSeek API发送消息列表并解析回复
+     */
     private String callDeepSeek(List<JSONObject> messages) {
         JSONObject body = new JSONObject();
         body.set("model", model);
@@ -175,6 +191,9 @@ public class AIChatServiceImpl implements AIChatService {
         }
     }
 
+    /**
+     * 从用户文本提取关键词用于知识库检索
+     */
     private List<String> extractKeywords(String text) {
         if (StrUtil.isBlank(text)) return new ArrayList<>();
         String result = text.replaceAll("[^\\u4e00-\\u9fa5a-zA-Z0-9]+", " ");
@@ -186,6 +205,9 @@ public class AIChatServiceImpl implements AIChatService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 加载最近N条会话历史（返回时间正序）
+     */
     private List<ChatMessage> loadRecentHistory(Long sessionId, int limit) {
         LambdaQueryWrapper<ChatMessage> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ChatMessage::getSessionId, sessionId)
@@ -200,6 +222,9 @@ public class AIChatServiceImpl implements AIChatService {
         return result;
     }
 
+    /**
+     * 将系统角色转为DeepSeek API的角色标识
+     */
     private String convertRole(String senderRole) {
         if ("USER".equals(senderRole) || "AGENT".equals(senderRole)) {
             return "user";

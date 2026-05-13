@@ -18,21 +18,27 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * 客服状态服务实现，基于Redis管理在线状态及负载均衡调度
+ */
 @Service
 public class AgentStatusServiceImpl implements AgentStatusService {
 
     @Resource
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate; // Redis操作
 
     @Resource
-    private ChatSessionMapper sessionMapper;
+    private ChatSessionMapper sessionMapper; // 会话数据访问
 
     @Resource
-    private ChatMessageMapper messageMapper;
+    private ChatMessageMapper messageMapper; // 消息数据访问
 
     @Resource
-    private AIChatService aiChatService;
+    private AIChatService aiChatService; // AI接管服务
 
+    /**
+     * 客服上线并自动接管AI活跃会话
+     */
     @Override
     public void goOnline(Long agentId) {
         redisTemplate.opsForSet().add(RedisKeyUtil.onlineAgents(), agentId.toString());
@@ -49,6 +55,9 @@ public class AgentStatusServiceImpl implements AgentStatusService {
         }
     }
 
+    /**
+     * 客服下线并将会话转接其他客服或AI接管
+     */
     @Override
     public void goOffline(Long agentId) {
         // 先查出该客服当前负责的活跃会话，再移除在线状态
@@ -71,18 +80,27 @@ public class AgentStatusServiceImpl implements AgentStatusService {
         }
     }
 
+    /**
+     * 检查指定客服是否在线
+     */
     @Override
     public boolean isOnline(Long agentId) {
         Boolean member = redisTemplate.opsForSet().isMember(RedisKeyUtil.onlineAgents(), agentId.toString());
         return Boolean.TRUE.equals(member);
     }
 
+    /**
+     * 判断是否至少有一名客服在线
+     */
     @Override
     public boolean hasAnyOnlineAgent() {
         Long size = redisTemplate.opsForSet().size(RedisKeyUtil.onlineAgents());
         return size != null && size > 0;
     }
 
+    /**
+     * 负载均衡选取活跃会话数最少的在线客服
+     */
     @Override
     public Long pickAvailableAgent() {
         Set<Long> onlineIds = getOnlineAgentIds();
@@ -95,6 +113,9 @@ public class AgentStatusServiceImpl implements AgentStatusService {
                 .orElse(null);
     }
 
+    /**
+     * 统计指定客服当前活跃会话数
+     */
     private long countActiveSessions(Long agentId) {
         LambdaQueryWrapper<ChatSession> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ChatSession::getAgentId, agentId)
@@ -102,6 +123,9 @@ public class AgentStatusServiceImpl implements AgentStatusService {
         return sessionMapper.selectCount(wrapper);
     }
 
+    /**
+     * 从Redis获取所有在线客服ID
+     */
     @Override
     public Set<Long> getOnlineAgentIds() {
         Set<Object> members = redisTemplate.opsForSet().members(RedisKeyUtil.onlineAgents());
@@ -114,6 +138,9 @@ public class AgentStatusServiceImpl implements AgentStatusService {
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * 查询所有AI负责的活跃会话
+     */
     private List<ChatSession> findAIActiveSessions() {
         LambdaQueryWrapper<ChatSession> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ChatSession::getAgentType, "AI")
@@ -121,6 +148,9 @@ public class AgentStatusServiceImpl implements AgentStatusService {
         return sessionMapper.selectList(wrapper);
     }
 
+    /**
+     * 查询指定客服的活跃会话列表
+     */
     private List<ChatSession> findActiveSessionsByAgent(Long agentId) {
         LambdaQueryWrapper<ChatSession> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ChatSession::getAgentId, agentId)
@@ -128,6 +158,9 @@ public class AgentStatusServiceImpl implements AgentStatusService {
         return sessionMapper.selectList(wrapper);
     }
 
+    /**
+     * 插入系统提示消息（转接通知等）
+     */
     private void insertSystemMsg(Long sessionId, String content) {
         ChatMessage msg = new ChatMessage();
         msg.setSessionId(sessionId);

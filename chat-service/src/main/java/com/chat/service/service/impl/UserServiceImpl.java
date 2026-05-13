@@ -8,6 +8,9 @@ import com.chat.service.mapper.UserMapper;
 import com.chat.service.service.UserService;
 import org.springframework.stereotype.Service;
 
+/**
+ * 用户服务实现，处理登录校验与注册逻辑
+ */
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements UserService {
 

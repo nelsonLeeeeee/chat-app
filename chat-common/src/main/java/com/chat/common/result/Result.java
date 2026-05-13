@@ -5,16 +5,22 @@ package com.chat.common.result;
  */
 public class Result<T> {
 
-    private Integer code;
-    private String message;
-    private T data;
+    private Integer code;   // 状态码
+    private String message; // 提示信息
+    private T data;         // 响应数据
 
     private Result() {}
 
+    /**
+     * 无数据成功响应
+     */
     public static <T> Result<T> ok() {
         return ok(null);
     }
 
+    /**
+     * 带数据成功响应
+     */
     public static <T> Result<T> ok(T data) {
         Result<T> r = new Result<>();
         r.code = 200;
@@ -23,10 +29,16 @@ public class Result<T> {
         return r;
     }
 
+    /**
+     * 默认失败响应（状态码500）
+     */
     public static <T> Result<T> fail(String message) {
         return fail(500, message);
     }
 
+    /**
+     * 带状态码失败响应
+     */
     public static <T> Result<T> fail(Integer code, String message) {
         Result<T> r = new Result<>();
         r.code = code;

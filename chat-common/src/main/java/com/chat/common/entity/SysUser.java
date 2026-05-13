@@ -7,14 +7,14 @@ import java.time.LocalDateTime;
  */
 public class SysUser {
 
-    private Long id;
-    private String username;
-    private String password;
-    private String nickname;
-    private String role;
-    private Integer status;
-    private LocalDateTime createTime;
-    private LocalDateTime updateTime;
+    private Long id;               // 主键ID
+    private String username;       // 用户名
+    private String password;       // 密码
+    private String nickname;       // 昵称
+    private String role;           // 角色
+    private Integer status;        // 状态
+    private LocalDateTime createTime;  // 创建时间
+    private LocalDateTime updateTime;  // 更新时间
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

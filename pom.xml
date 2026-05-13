@@ -19,15 +19,15 @@
     </modules>
 
     <properties>
-        <java.version>1.8</java.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring-boot.version>2.7.18</spring-boot.version>
-        <spring-cloud.version>2021.0.9</spring-cloud.version>
-        <spring-cloud-alibaba.version>2021.0.6.0</spring-cloud-alibaba.version>
-        <mybatis-plus.version>3.5.5</mybatis-plus.version>
-        <mysql.version>8.0.33</mysql.version>
-        <hutool.version>5.8.25</hutool.version>
-        <pdfbox.version>2.0.29</pdfbox.version>
+        <java.version>1.8</java.version>                    <!-- Java 版本 -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> <!-- 源码编码 -->
+        <spring-boot.version>2.7.18</spring-boot.version>  <!-- SpringBoot 版本 -->
+        <spring-cloud.version>2021.0.9</spring-cloud.version> <!-- SpringCloud 版本 -->
+        <spring-cloud-alibaba.version>2021.0.6.0</spring-cloud-alibaba.version> <!-- SpringCloud Alibaba -->
+        <mybatis-plus.version>3.5.5</mybatis-plus.version> <!-- MyBatis-Plus 版本 -->
+        <mysql.version>8.0.33</mysql.version>               <!-- MySQL 驱动版本 -->
+        <hutool.version>5.8.25</hutool.version>             <!-- Hutool 工具类版本 -->
+        <pdfbox.version>2.0.29</pdfbox.version>             <!-- PDFBox 版本 -->
     </properties>
 
     <dependencyManagement>
@@ -94,6 +94,7 @@
 
     <build>
         <plugins>
+            <!-- SpringBoot 打包插件 -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

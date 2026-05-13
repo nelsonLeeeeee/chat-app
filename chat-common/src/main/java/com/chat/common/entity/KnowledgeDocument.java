@@ -2,16 +2,19 @@ package com.chat.common.entity;
 
 import java.time.LocalDateTime;
 
+/**
+ * 知识库文档实体
+ */
 public class KnowledgeDocument {
 
-    private Long id;
-    private String fileName;
-    private Long fileSize;
-    private String content;
-    private Integer chunkCount;
-    private Long uploaderId;
-    private LocalDateTime createTime;
-    private LocalDateTime updateTime;
+    private Long id;               // 主键ID
+    private String fileName;       // 文件名
+    private Long fileSize;         // 文件大小
+    private String content;        // 文档内容
+    private Integer chunkCount;    // 分块数量
+    private Long uploaderId;       // 上传者ID
+    private LocalDateTime createTime;  // 创建时间
+    private LocalDateTime updateTime;  // 更新时间
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

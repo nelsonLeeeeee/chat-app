@@ -1,4 +1,4 @@
-/* 全局样式 */
+/* ===== 全局样式 ===== */
 * {
     margin: 0;
     padding: 0;
@@ -14,7 +14,7 @@ body {
     justify-content: center;
 }
 
-/* 通用容器 */
+/* ===== 通用容器 ===== */
 .container {
     width: 100%;
     max-width: 420px;
@@ -36,7 +36,7 @@ body {
     font-weight: 600;
 }
 
-/* 表单 */
+/* ===== 表单 ===== */
 .form-group {
     margin-bottom: 18px;
 }
@@ -77,7 +77,7 @@ body {
     transition: border-color .2s;
 }
 
-/* 按钮 */
+/* ===== 按钮 ===== */
 .btn {
     display: inline-block;
     border: none;
@@ -128,7 +128,7 @@ body {
     font-size: 13px;
 }
 
-/* 消息提示 */
+/* ===== 消息提示 ===== */
 .msg {
     text-align: center;
     font-size: 13px;
@@ -139,7 +139,7 @@ body {
 .msg.error { color: #e74c3c; }
 .msg.success { color: #27ae60; }
 
-/* 聊天容器 */
+/* ===== 聊天容器 ===== */
 .chat-container {
     width: 100vw;
     max-width: 1100px;
@@ -151,7 +151,7 @@ body {
     overflow: hidden;
 }
 
-/* 侧边栏 */
+/* ===== 侧边栏 ===== */
 .chat-sidebar {
     width: 260px;
     background: #f7f8fa;
@@ -193,7 +193,7 @@ body {
     padding: 28px 0;
 }
 
-/* 客服类型标签 */
+/* ===== 客服类型标签 ===== */
 .agent-tag {
     font-size: 10px;
     padding: 1px 6px;
@@ -209,7 +209,7 @@ body {
     color: #27ae60;
 }
 
-/* 聊天主区域 */
+/* ===== 聊天主区域 ===== */
 .chat-main {
     flex: 1;
     display: flex;
@@ -231,7 +231,7 @@ body {
     gap: 8px;
 }
 
-/* 状态徽标 */
+/* ===== 状态徽标 ===== */
 .status-badge {
     font-size: 11px;
     padding: 3px 10px;
@@ -247,6 +247,7 @@ body {
     color: #e74c3c;
 }
 
+/* ===== 消息列表 ===== */
 .chat-messages {
     flex: 1;
     padding: 20px;
@@ -343,7 +344,7 @@ body {
     margin-top: 4px;
 }
 
-/* 输入区域 */
+/* ===== 输入区域 ===== */
 .chat-input {
     padding: 12px 20px;
     border-top: 1px solid #e8eaed;
@@ -374,7 +375,7 @@ body {
     height: 44px;
 }
 
-/* 知识库面板 */
+/* ===== 知识库面板 ===== */
 .knowledge-panel {
     width: 280px;
     background: #f7f8fa;

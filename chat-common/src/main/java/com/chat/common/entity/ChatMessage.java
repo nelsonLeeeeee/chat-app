@@ -7,13 +7,13 @@ import java.time.LocalDateTime;
  */
 public class ChatMessage {
 
-    private Long id;
-    private Long sessionId;
-    private Long senderId;
-    private String content;
-    private String senderRole;
-    private String msgType;
-    private LocalDateTime createTime;
+    private Long id;               // 主键ID
+    private Long sessionId;        // 会话ID
+    private Long senderId;         // 发送者ID
+    private String content;        // 消息内容
+    private String senderRole;     // 发送者角色
+    private String msgType;        // 消息类型
+    private LocalDateTime createTime;  // 创建时间
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

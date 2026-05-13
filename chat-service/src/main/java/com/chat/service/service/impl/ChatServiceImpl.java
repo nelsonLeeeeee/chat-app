@@ -17,21 +17,27 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.List;
 
+/**
+ * 聊天服务实现，负责会话创建、消息收发与客服分配
+ */
 @Service
 public class ChatServiceImpl extends ServiceImpl<ChatSessionMapper, ChatSession> implements ChatService {
 
     @Resource
-    private ChatMessageMapper messageMapper;
+    private ChatMessageMapper messageMapper; // 消息数据访问
 
     @Resource
-    private AgentStatusService agentStatusService;
+    private AgentStatusService agentStatusService; // 客服状态管理
 
     @Resource
-    private AIChatService aiChatService;
+    private AIChatService aiChatService; // AI回复生成
 
     @Resource
-    private UserService userService;
+    private UserService userService; // 用户信息查询
 
+    /**
+     * 创建会话（B2B模式每用户仅保留一个活跃会话），自动分配客服或AI
+     */
     @Override
     @Transactional
     public ChatSession createSession(Long userId) {
@@ -74,6 +80,9 @@ public class ChatServiceImpl extends ServiceImpl<ChatSessionMapper, ChatSession>
         return session;
     }
 
+    /**
+     * 手动为会话分配指定人工客服
+     */
     @Override
     public void assignAgent(Long sessionId, Long agentId) {
         ChatSession session = getById(sessionId);
@@ -84,6 +93,9 @@ public class ChatServiceImpl extends ServiceImpl<ChatSessionMapper, ChatSession>
         }
     }
 
+    /**
+     * 发送消息并自动推断发送者角色
+     */
     @Override
     public ChatMessage sendMessage(Long sessionId, Long senderId, String content) {
         SysUser sender = userService.getById(senderId);
@@ -91,6 +103,9 @@ public class ChatServiceImpl extends ServiceImpl<ChatSessionMapper, ChatSession>
         return sendMessage(sessionId, senderId, senderRole, content);
     }
 
+    /**
+     * 发送消息（显式指定角色），AI会话中非AI消息触发自动回复
+     */
     @Override
     @Transactional
     public ChatMessage sendMessage(Long sessionId, Long senderId, String senderRole, String content) {
@@ -121,6 +136,9 @@ public class ChatServiceImpl extends ServiceImpl<ChatSessionMapper, ChatSession>
         return message;
     }
 
+    /**
+     * 按时间正序获取会话消息列表
+     */
     @Override
     public List<ChatMessage> getMessages(Long sessionId) {
         LambdaQueryWrapper<ChatMessage> wrapper = new LambdaQueryWrapper<>();
@@ -129,6 +147,9 @@ public class ChatServiceImpl extends ServiceImpl<ChatSessionMapper, ChatSession>
         return messageMapper.selectList(wrapper);
     }
 
+    /**
+     * 获取用户会话列表并填充用户名
+     */
     @Override
     public List<ChatSession> getSessions(Long userId) {
         LambdaQueryWrapper<ChatSession> wrapper = new LambdaQueryWrapper<>();
@@ -139,6 +160,9 @@ public class ChatServiceImpl extends ServiceImpl<ChatSessionMapper, ChatSession>
         return sessions;
     }
 
+    /**
+     * 获取客服活跃会话列表并填充用户与客服名称
+     */
     @Override
     public List<ChatSession> getSessionsByAgent(Long agentId) {
         LambdaQueryWrapper<ChatSession> wrapper = new LambdaQueryWrapper<>();
@@ -150,6 +174,9 @@ public class ChatServiceImpl extends ServiceImpl<ChatSessionMapper, ChatSession>
         return sessions;
     }
 
+    /**
+     * 批量填充会话的用户名和客服名
+     */
     private void populateNames(List<ChatSession> sessions) {
         for (ChatSession s : sessions) {
             SysUser user = userService.getById(s.getUserId());

@@ -9,6 +9,9 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import java.util.List;
 
+/**
+ * 知识库管理接口
+ */
 @RestController
 @RequestMapping("/knowledge")
 public class KnowledgeBaseController {
@@ -16,6 +19,9 @@ public class KnowledgeBaseController {
     @Resource
     private KnowledgeBaseService knowledgeBaseService;
 
+    /**
+     * 上传 PDF 文档
+     */
     @PostMapping("/upload")
     public Result<KnowledgeDocument> upload(@RequestParam("file") MultipartFile file,
                                             @RequestParam(required = false) Long uploaderId) {
@@ -34,11 +40,17 @@ public class KnowledgeBaseController {
         }
     }
 
+    /**
+     * 列出所有文档
+     */
     @GetMapping("/list")
     public Result<List<KnowledgeDocument>> list() {
         return Result.ok(knowledgeBaseService.listDocuments());
     }
 
+    /**
+     * 删除文档
+     */
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         knowledgeBaseService.deleteDocument(id);

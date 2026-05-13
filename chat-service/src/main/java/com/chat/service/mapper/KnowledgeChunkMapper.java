@@ -8,9 +8,15 @@ import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
+/**
+ * 知识分块数据访问接口
+ */
 @Mapper
 public interface KnowledgeChunkMapper extends BaseMapper<KnowledgeChunk> {
 
+    /**
+     * 按关键词搜索分块，按匹配度排序
+     */
     @Select("<script>"
             + "SELECT kc.*, COUNT(*) AS match_count FROM knowledge_chunk kc WHERE "
             + "<foreach collection='keywords' item='kw' separator=' OR '>"

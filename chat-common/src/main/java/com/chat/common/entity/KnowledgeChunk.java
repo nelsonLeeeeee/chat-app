@@ -2,13 +2,16 @@ package com.chat.common.entity;
 
 import java.time.LocalDateTime;
 
+/**
+ * 知识库分块实体
+ */
 public class KnowledgeChunk {
 
-    private Long id;
-    private Long documentId;
-    private Integer chunkIndex;
-    private String content;
-    private LocalDateTime createTime;
+    private Long id;               // 主键ID
+    private Long documentId;       // 所属文档ID
+    private Integer chunkIndex;    // 分块序号
+    private String content;        // 分块内容
+    private LocalDateTime createTime;  // 创建时间
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

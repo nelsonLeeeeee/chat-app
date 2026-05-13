@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS `chat_message` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息记录表';
 
 -- 种子数据：AI 智能客服系统用户
+-- 初始化 AI 智能客服账号
 INSERT INTO sys_user (username, password, nickname, role, status)
 VALUES ('ai_assistant', MD5('ai_system_internal_@#!'), '智能客服', 'AI', 1);
 
@@ -53,6 +54,7 @@ VALUES ('ai_assistant', MD5('ai_system_internal_@#!'), '智能客服', 'AI', 1);
 -- RAG 知识库相关表（v2 新增）
 -- ============================================================
 
+-- 知识库文档表
 CREATE TABLE IF NOT EXISTS `knowledge_document` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `file_name` VARCHAR(255) NOT NULL COMMENT '原始文件名',
@@ -66,6 +68,7 @@ CREATE TABLE IF NOT EXISTS `knowledge_document` (
     INDEX `idx_uploader_id` (`uploader_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库文档表';
 
+-- 知识库分块表
 CREATE TABLE IF NOT EXISTS `knowledge_chunk` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `document_id` BIGINT NOT NULL COMMENT '所属文档ID',
@@ -77,7 +80,9 @@ CREATE TABLE IF NOT EXISTS `knowledge_chunk` (
     FULLTEXT INDEX `ft_content` (`content`) WITH PARSER ngram
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库分块表';
 
+-- ============================================================
 -- 已有数据库迁移语句（如果表已存在，单独执行以下 ALTER）
+-- ============================================================
 -- ALTER TABLE chat_message ADD COLUMN sender_role VARCHAR(16) NOT NULL DEFAULT 'USER' COMMENT '发送者角色: USER-用户, AGENT-客服, AI-智能客服' AFTER sender_id;
 -- ALTER TABLE chat_session ADD COLUMN agent_type VARCHAR(16) DEFAULT NULL COMMENT '服务方类型: HUMAN-人工客服, AI-智能客服' AFTER agent_id;
 -- INSERT INTO sys_user (username, password, nickname, role, status) VALUES ('ai_assistant', MD5('ai_system_internal_@#!'), '智能客服', 'AI', 1);

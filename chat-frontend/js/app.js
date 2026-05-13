@@ -52,6 +52,7 @@
         chatBox.style.display = 'none';
     }
 
+    /** 显示聊天主界面，按角色差异化布局 */
     function showChat() {
         loginBox.style.display = 'none';
         registerBox.style.display = 'none';
@@ -145,6 +146,7 @@
     };
 
     /* ========== 退出 ========== */
+    /** 退出登录，客服下线后清理状态 */
     async function doLogout() {
         if (user && user.role === 'AGENT') {
             try { await API.agentGoOffline(user.id); } catch (e) {}
@@ -162,6 +164,7 @@
     userSideLogoutBtn.onclick = doLogout;
 
     /* ========== 会话管理 ========== */
+    /** 加载会话列表，根据角色调用不同接口 */
     async function loadSessions() {
         if (!user) return;
         try {
@@ -223,6 +226,7 @@
         });
     }
 
+    /** 切换当前会话，更新标题并启动轮询 */
     function switchSession(sessionId) {
         activeSessionId = sessionId;
         renderSessions();
@@ -244,6 +248,7 @@
     }
 
     /* ========== 消息加载 ========== */
+    /** 从服务端拉取消息列表 */
     async function loadMessages(sessionId) {
         try {
             var res = await API.getMessages(sessionId);
@@ -257,6 +262,7 @@
         }
     }
 
+    /** 渲染消息列表，按发送者角色区分样式 */
     function renderMessages(messages) {
         if (!messages || messages.length === 0) {
             messageList.innerHTML = '<div class="message-empty">暂无消息，发送第一条消息吧</div>';
@@ -343,6 +349,7 @@
         }
     }
 
+    /** 轮询检查客服在线状态变化 */
     async function checkAgentStatus() {
         try {
             var res = await API.getAgentStatus();
@@ -362,6 +369,7 @@
     }
 
     /* ========== 工具函数 ========== */
+    /** HTML 转义，防止 XSS 注入 */
     function escapeHtml(text) {
         var div = document.createElement('div');
         div.textContent = text;
@@ -395,6 +403,7 @@
         }
     };
 
+    /** 加载知识库文档列表 */
     async function loadKnowledgeList() {
         try {
             var res = await API.getKnowledgeList();

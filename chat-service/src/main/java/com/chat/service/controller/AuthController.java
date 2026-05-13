@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
+/**
+ * 用户认证接口
+ */
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -14,6 +17,9 @@ public class AuthController {
     @Resource
     private UserService userService;
 
+    /**
+     * 用户登录
+     */
     @PostMapping("/login")
     public Result<SysUser> login(@RequestParam String username,
                                  @RequestParam String password) {
@@ -24,6 +30,9 @@ public class AuthController {
         return Result.ok(user);
     }
 
+    /**
+     * 用户注册
+     */
     @PostMapping("/register")
     public Result<SysUser> register(@RequestBody SysUser user) {
         SysUser registered = userService.register(user);

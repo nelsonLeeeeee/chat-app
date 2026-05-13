@@ -16,6 +16,9 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 知识库服务实现，负责PDF解析、文本分块与文档管理
+ */
 @Service
 public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
@@ -28,6 +31,9 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Resource
     private KnowledgeChunkMapper chunkMapper;
 
+    /**
+     * 解析PDF文本并分块存储到知识库
+     */
     @Override
     @Transactional
     public KnowledgeDocument uploadPdf(MultipartFile file, Long uploaderId) {
@@ -65,6 +71,9 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return doc;
     }
 
+    /**
+     * 按创建时间倒序列出所有文档
+     */
     @Override
     public List<KnowledgeDocument> listDocuments() {
         LambdaQueryWrapper<KnowledgeDocument> wrapper = new LambdaQueryWrapper<>();
@@ -72,6 +81,9 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return documentMapper.selectList(wrapper);
     }
 
+    /**
+     * 级联删除文档及其所有分块
+     */
     @Override
     @Transactional
     public void deleteDocument(Long documentId) {
@@ -81,6 +93,9 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         documentMapper.deleteById(documentId);
     }
 
+    /**
+     * 按句子边界分块文本，块长500字符含50字符重叠
+     */
     private List<String> chunkText(String text) {
         List<String> chunks = new ArrayList<>();
         int start = 0;

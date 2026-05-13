@@ -1,12 +1,14 @@
+# 服务端口
 server:
   port: 8082
 
 spring:
   config:
-    import: optional:nacos:chat-gateway.yml
+    import: optional:nacos:chat-gateway.yml  # Nacos 配置导入
   application:
-    name: chat-gateway
+    name: chat-gateway  # 应用名称
   cloud:
+    # Nacos 服务发现与配置
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
@@ -19,14 +21,16 @@ spring:
         file-extension: yml
         username: nacos
         password: nacos
+    # 网关路由规则
     gateway:
       routes:
         - id: chat-service
-          uri: http://localhost:8081
+          uri: http://localhost:8081  # 转发目标地址
           predicates:
-            - Path=/api/**
+            - Path=/api/**  # 匹配 /api/** 路径
           filters:
-            - StripPrefix=1
+            - StripPrefix=1  # 去除路径前缀
+    # Sentinel 流量控制
     sentinel:
       transport:
         dashboard: 127.0.0.1:8858

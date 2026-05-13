@@ -9,17 +9,17 @@ import java.time.LocalDateTime;
  */
 public class ChatSession {
 
-    private Long id;
-    private Long userId;
-    private Long agentId;
-    private String agentType;
-    private String status;
-    private LocalDateTime createTime;
-    private LocalDateTime closeTime;
+    private Long id;               // 主键ID
+    private Long userId;           // 用户ID
+    private Long agentId;          // 客服ID
+    private String agentType;      // 客服类型
+    private String status;         // 会话状态
+    private LocalDateTime createTime;  // 创建时间
+    private LocalDateTime closeTime;   // 关闭时间
     @TableField(exist = false)
-    private String userName;
+    private String userName;       // 用户名（非表字段）
     @TableField(exist = false)
-    private String agentName;
+    private String agentName;      // 客服名（非表字段）
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
