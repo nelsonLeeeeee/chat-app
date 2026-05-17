@@ -68,3 +68,13 @@ deepseek:
     key: sk-21a258f3a16d428abac97a54a547755a
     url: https://api.deepseek.com/v1/chat/completions
     model: deepseek-chat
+  embedding:
+    url: https://api.deepseek.com/v1/embeddings
+    model: deepseek-embedding-v1
+    dimension: 1536
+
+# Milvus 向量数据库
+milvus:
+  host: localhost
+  port: 19530
+  collection: knowledge_chunks

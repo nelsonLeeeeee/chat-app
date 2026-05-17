@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS `knowledge_chunk` (
     `document_id` BIGINT NOT NULL COMMENT '所属文档ID',
     `chunk_index` INT NOT NULL COMMENT '分块序号(从0开始)',
     `content` TEXT NOT NULL COMMENT '分块文本内容',
+    `vector` MEDIUMTEXT COMMENT '向量数据(JSON数组, 1536维)',
     `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`id`),
     INDEX `idx_document_id` (`document_id`),

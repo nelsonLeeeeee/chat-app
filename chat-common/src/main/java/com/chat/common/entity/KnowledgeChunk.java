@@ -11,6 +11,7 @@ public class KnowledgeChunk {
     private Long documentId;       // 所属文档ID
     private Integer chunkIndex;    // 分块序号
     private String content;        // 分块内容
+    private String vector;         // 向量数据(JSON数组)
     private LocalDateTime createTime;  // 创建时间
 
     public Long getId() { return id; }
@@ -21,6 +22,8 @@ public class KnowledgeChunk {
     public void setChunkIndex(Integer chunkIndex) { this.chunkIndex = chunkIndex; }
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+    public String getVector() { return vector; }
+    public void setVector(String vector) { this.vector = vector; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
 }

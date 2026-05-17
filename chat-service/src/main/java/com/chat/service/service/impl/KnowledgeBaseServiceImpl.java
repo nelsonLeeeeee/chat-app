@@ -5,9 +5,13 @@ import com.chat.common.entity.KnowledgeChunk;
 import com.chat.common.entity.KnowledgeDocument;
 import com.chat.service.mapper.KnowledgeChunkMapper;
 import com.chat.service.mapper.KnowledgeDocumentMapper;
+import com.chat.service.service.EmbeddingService;
 import com.chat.service.service.KnowledgeBaseService;
+import com.chat.service.service.MilvusVectorService;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,11 +21,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 知识库服务实现，负责PDF解析、文本分块与文档管理
+ * 知识库服务实现，负责PDF解析、文本分块与向量化存储（Milvus）
  */
 @Service
 public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
+    private static final Logger log = LoggerFactory.getLogger(KnowledgeBaseServiceImpl.class);
     private static final int CHUNK_SIZE = 500;
     private static final int CHUNK_OVERLAP = 50;
 
@@ -31,8 +36,14 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Resource
     private KnowledgeChunkMapper chunkMapper;
 
+    @Resource
+    private EmbeddingService embeddingService;
+
+    @Resource
+    private MilvusVectorService milvusVectorService;
+
     /**
-     * 解析PDF文本并分块存储到知识库
+     * 解析PDF文本，分块后生成向量存入Milvus
      */
     @Override
     @Transactional
@@ -51,6 +62,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
         List<String> chunks = chunkText(text);
 
+        // 先插入文档获取ID
         KnowledgeDocument doc = new KnowledgeDocument();
         doc.setFileName(file.getOriginalFilename());
         doc.setFileSize(file.getSize());
@@ -59,13 +71,31 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         doc.setUploaderId(uploaderId);
         documentMapper.insert(doc);
 
+        // 批量生成向量并存入Milvus
+        List<float[]> vectors;
+        try {
+            vectors = embeddingService.embedBatch(chunks);
+        } catch (Exception e) {
+            log.error("向量生成失败，降级使用零向量", e);
+            vectors = new ArrayList<>();
+            for (int i = 0; i < chunks.size(); i++) {
+                vectors.add(new float[0]);
+            }
+        }
+        try {
+            milvusVectorService.insertVectors(doc.getId(), chunks, vectors);
+        } catch (Exception e) {
+            log.error("Milvus写入失败, documentId={}", doc.getId(), e);
+        }
+
         int idx = 0;
         for (String chunk : chunks) {
             KnowledgeChunk kc = new KnowledgeChunk();
             kc.setDocumentId(doc.getId());
-            kc.setChunkIndex(idx++);
+            kc.setChunkIndex(idx);
             kc.setContent(chunk);
             chunkMapper.insert(kc);
+            idx++;
         }
 
         return doc;
@@ -82,7 +112,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     /**
-     * 级联删除文档及其所有分块
+     * 级联删除文档、MySQL分块及Milvus向量
      */
     @Override
     @Transactional
@@ -91,6 +121,11 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         chunkWrapper.eq(KnowledgeChunk::getDocumentId, documentId);
         chunkMapper.delete(chunkWrapper);
         documentMapper.deleteById(documentId);
+        try {
+            milvusVectorService.deleteByDocumentId(documentId);
+        } catch (Exception e) {
+            log.error("删除Milvus向量失败, documentId={}", documentId, e);
+        }
     }
 
     /**
